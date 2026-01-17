@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ゴキブリチャット</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  background: #4f46e5;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  height: 200px;
+}
+
+#icon {
+  width: 300px;
+  height: 300px;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+#title {
+  text-align: center;
+  line-height: 1.2;
+  font-weight: bold;
+  margin-top: 12px;
+}
+
+#nameOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+#nameBox {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 300px;
+  display: flex;
+  gap: 8px;
+}
+
+#nameBox input {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+}
+
+#nameBox button {
+  padding: 10px 14px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+#chat {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.message {
+  background: white;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-break: break-word;
+  position: relative;
+}
+
+.me {
+  margin-left: auto;
+  background: #dbeafe;
+}
+
+.readCount {
+  position: absolute;
+  bottom: 2px;
+  right: 6px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.4);
+}
+
+.system {
+  text-align: center;
+  font-size: 13px;
+  color: #555;
+}
+
+footer {
+  display: flex;
+  padding: 8px;
+  background: #eee;
+}
+
+footer input {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+footer button {
+  margin-left: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img id="icon" src="https://imgur.com/a/glV5VQg" alt="アイコン">
+  <div id="title">
+    ゴキブリ<br>
+    チャット<br>
+    Version0.1
+  </div>
+</header>
+
+<div id="chat"></div>
+
+<footer>
+  <input id="input" placeholder="メッセージを入力">
+  <button id="sendBtn">送信</button>
+</footer>
+
+<div id="nameOverlay">
+  <div id="nameBox">
+    <input id="nameInput" placeholder="名前を入力">
+    <button id="nameOk">OK</button>
+  </div>
+</div>
+
+<input type="file" id="iconInput" accept="image/*" style="display:none">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const ADMIN_PASSWORD = "カズサ最高";
+
+// Firebase設定
+const firebaseConfig = {
+  apiKey: "AIzaSyD2ayLO8X5BPNUzweTzWvPpNIxsZzlCFiU",
+  authDomain: "gokiburichat.firebaseapp.com",
+  projectId: "gokiburichat",
+  storageBucket: "gokiburichat.appspot.com",
+  messagingSenderId: "749427508728",
+  appId: "1:749427508728:web:434d0a411023776323820d",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const icon = document.getElementById("icon");
+const iconInput = document.getElementById("iconInput");
+const nameOverlay = document.getElementById("nameOverlay");
+const nameInput = document.getElementById("nameInput");
+const nameOk = document.getElementById("nameOk");
+
+let username = localStorage.getItem("username");
+let iconData = localStorage.getItem("iconData");
+
+icon.src = iconData || icon.src;
+
+if (!username || username.trim() === "") {
+  nameOverlay.style.display = "flex";
+}
+
+nameOk.onclick = () => {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  username = name;
+  localStorage.setItem("username", username);
+  nameOverlay.style.display = "none";
+  sendSystemMessage(`${username} が入室しました`);
+};
+
+// Firestoreリアルタイム
+db.collection("messages").orderBy("time")
+  .onSnapshot(snapshot => {
+    chat.innerHTML = "";
+    snapshot.forEach(doc => {
+      const msg = doc.data();
+      addMessage(msg.username === username ? `${msg.username}: ${msg.text}` : `${msg.username}: ${msg.text}`, msg.username === username ? "me" : "other", msg.readCount);
+    });
+    chat.scrollTop = chat.scrollHeight;
+  });
+
+function sendSystemMessage(text) {
+  db.collection("messages").add({
+    username: "system",
+    text: text,
+    time: Date.now(),
+    readCount: 0
+  });
+}
+
+function send() {
+  const text = input.value.trim();
+  if (!text || !username) return;
+  db.collection("messages").add({
+    username: username,
+    text: text,
+    time: Date.now(),
+    readCount: 0
+  });
+  input.value = "";
+}
+
+sendBtn.onclick = send;
+input.addEventListener("keydown", e => e.key === "Enter" && send());
+
+function addMessage(text, type, readCount=0) {
+  const div = document.createElement("div");
+  div.className = "message " + (type === "me" ? "me" : type === "system" ? "system" : "");
+  div.textContent = text;
+  if (type !== "system") {
+    const span = document.createElement("span");
+    span.className = "readCount";
+    span.textContent = readCount > 0 ? `🪿${readCount}` : "";
+    div.appendChild(span);
+  }
+  chat.appendChild(div);
+}
+</script>
+
+</body>
+</html>

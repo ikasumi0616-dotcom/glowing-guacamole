@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyash Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --kyash-blue: #23b5ff;
+            --text-main: #1a1a1a;
+            --text-sub: #8e8e93;
+            --bg-gray: #f7f9fb;
+            --border-color: #f2f2f7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 450px; 
+            height: 100vh;
+            background-color: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        /* ==========================================================================
+           1. ホーム画面のスタイル
+           ========================================================================== */
+        .header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background-color: #ffffff;
+            box-sizing: border-box;
+        }
+        .header-icon { font-size: 20px; color: var(--text-main); cursor: pointer; width: 30px; }
+        .header-title { font-weight: bold; font-size: 17px; color: var(--text-main); }
+
+        .content {
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #ffffff;
+            padding: 10px 16px 80px 16px; 
+            box-sizing: border-box;
+        }
+
+        .dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 15px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background-color: #c7c7cc; }
+        .dot.active { background-color: #007aff; }
+
+        .card-wrapper { margin-bottom: 25px; }
+        .kyash-card {
+            background: linear-gradient(135deg, #20dbff 0%, #0084ff 100%);
+            border-radius: 16px;
+            aspect-ratio: 1.58 / 1; 
+            padding: 20px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(0, 132, 255, 0.25);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .card-logo { font-size: 22px; font-weight: 900; font-style: italic; }
+        .card-chip { position: absolute; top: 20px; right: 20px; font-size: 20px; opacity: 0.8; }
+        .card-number { font-size: 22px; letter-spacing: 2px; font-weight: bold; margin-top: auto; margin-bottom: 10px; }
+        .card-brand { font-size: 24px; font-weight: bold; font-style: italic; }
+
+        .balance-section { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .balance-item { text-align: center; cursor: pointer; flex: 1; }
+        .balance-label { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
+        .balance-value { font-size: 18px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .balance-value span.p-icon { background-color: #007aff; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        .action-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+        .action-box { flex: 1; border: 1px solid #e5e5ea; border-radius: 12px; height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; font-size: 14px; color: var(--text-main); cursor: pointer; background: #fff; box-sizing: border-box; }
+        .action-box i { font-size: 18px; color: #007aff; }
+
+        .gpay-banner { background-color: #f2f2f7; border-radius: 16px; padding: 16px; text-align: center; margin-bottom: 20px; cursor: pointer; }
+        .gpay-btn { background-color: #000; color: white; border-radius: 20px; padding: 8px 24px; display: inline-flex; align-items: center; font-weight: bold; font-size: 14px; margin-bottom: 8px; }
+        .gpay-text { font-size: 11px; color: var(--text-sub); }
+
+        .banner-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; }
+        .banner-card { min-width: 160px; background-color: #fff9f5; border: 1px solid #ffebe0; border-radius: 12px; padding: 12px; cursor: pointer; box-sizing: border-box; }
+        .banner-card.blue { background-color: #f0f4ff; border-color: #e0e8ff; }
+        .banner-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
+        .banner-desc { font-size: 10px; color: var(--text-sub); line-height: 1.3; }
+
+        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 65px; background-color: #ffffff; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; box-sizing: border-box; padding-bottom: 10px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); font-size: 10px; cursor: pointer; width: 20%; }
+        .nav-item.active { color: #007aff; }
+        .nav-item i { font-size: 20px; margin-bottom: 3px; }
+
+        /* ==========================================================================
+           2. 履歴画面のスタイル（スクショ 1000012464.png をコードで完全再現）
+           ========================================================================== */
+        .history-screen {
+            display: none; /* 初期は非表示 */
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            overflow-y: auto;
+        }
+
+        /* 履歴用の水色ヘッダー */
+        .history-header {
+            background-color: #1fcbff;
+            color: white;
+            padding: 15px 20px 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .history-back-arrow {
+            position: absolute;
+            top: 15px;
+            left: 16px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .h-account-title { font-size: 13px; opacity: 0.9; margin-bottom: 6px; }
+        .h-balance-main { font-size: 32px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;}
+        .h-balance-main i { font-size: 14px; opacity: 0.8; }
+        .h-point-sub { font-size: 12px; opacity: 0.9; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .h-point-icon { background: rgba(255,255,255,0.3); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        .h-point-sub i { font-size: 10px; }
+
+        /* 履歴リストエリア */
+        .history-list {
+            background-color: #ffffff;
+        }
+        .history-section-title {
+            font-size: 12px;
+            color: #8c8c91;
+            padding: 12px 16px 4px 16px;
+            background-color: #ffffff;
+        }
+        .history-date-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8c8c91;
+            padding: 14px 16px 6px 16px;
+            border-bottom: 1px solid #f9f9f9;
+        }
+        
+        /* 各利用明細アイテム */
+        .history-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f2f2f7;
+            background-color: #ffffff;
+        }
+        .item-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        /* 各種アイコンカラー設定 */
+        .icon-cyan { background-color: #e4f9ff; color: #00c3ff; font-size: 20px; font-weight: bold; font-style: italic;}
+        .icon-blue { background-color: #e3f2ff; color: #007aff; }
+        .icon-green { background-color: #eafaf1; color: #2cd17d; }
+        
+        .item-details {
+            flex-grow: 1;
+        }
+        .item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .item-desc {
+            font-size: 11px;
+            color: var(--text-sub);
+            line-height: 1.4;
+            padding-right: 10px;
+        }
+        .item-amount {
+            font-size: 15px;
+            font-weight: bold;
+            text-align: right;
+            white-space: nowrap;
+            color: var(--text-main);
+            margin-top: 2px;
+        }
+        .amount-green {
+            color: #2cd17d;
+        }
+
+        /* --- トースト --- */
+        .toast {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="header" id="mainHeader">
+        <span class="header-icon" id="cardIcon"><i class="fa-regular fa-credit-card"></i></span>
+        <div class="header-title">個人口座</div>
+        <span class="header-icon" id="bellIcon" style="text-align: right;"><i class="fa-regular fa-bell"></i></span>
+    </div>
+
+    <div class="content" id="homeScreen">
+        <div class="dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="card-wrapper">
+            <div class="kyash-card">
+                <div class="card-logo">Kyash</div>
+                <div class="card-chip"><i class="fa-solid fa-wifi"></i></div>
+                <div class="card-number">•••• •••• •••• 1251</div>
+                <div class="card-brand">VISA</div>
+            </div>
+        </div>
+
+        <div class="balance-section">
+            <div class="balance-item" id="balanceBtn">
+                <div class="balance-label">残高</div>
+                <div class="balance-value">¥0 <i class="fa-solid fa-chevron-right" style="font-size: 11px; color:#c7c7cc;"></i></div>
+            </div>
+            <div class="balance-item" id="pointBtn">
+                <div class="balance-label">ポイント</div>
+                <div class="balance-value">
+                    <span class="p-icon">P</span> 0 <i class="fa-solid fa-chevron-right" style="font-size: 11px; color:#c7c7cc;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-row">
+            <div class="action-box" id="withdrawBtn"><i class="fa-regular fa-circle-down"></i> 出金</div>
+            <div class="action-box" id="chargeBtn"><i class="fa-regular fa-circle-up"></i> 入金(チャージ)</div>
+            <div class="action-box" id="historyBtn"><i class="fa-solid fa-clock-rotate-left"></i> 履歴</div>
+        </div>
+
+        <div class="gpay-banner" id="gpayBtn">
+            <div class="gpay-btn">G Pay に追加</div>
+            <div class="gpay-text">Google Payを設定することで、Visaのタッチ決済が利用できます</div>
+        </div>
+
+        <div class="banner-list">
+            <div class="banner-card" id="banner1">
+                <div class="banner-title">オンライン決済</div>
+                <div class="banner-desc">オンラインショップ、オンラインサービスでの支払い</div>
+            </div>
+            <div class="banner-card blue" id="banner2">
+                <div class="banner-title">Visaのタッチ決済</div>
+                <div class="banner-desc">Google Payを設定してタッチでスマートにお支払い</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-screen" id="historyScreen">
+        <div class="history-header">
+            <div class="history-back-arrow" id="historyBackBtn"><i class="fa-solid fa-arrow-left"></i></div>
+            <div class="h-account-title">個人口座</div>
+            <div class="h-balance-main">¥0 <i class="fa-solid fa-chevron-right"></i></div>
+            <div class="h-point-sub">
+                ポイント <span class="h-point-icon">P</span> 0 <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        </div>
+
+        <div class="history-list">
+            <div class="history-section-title">履歴</div>
+            
+            <div class="history-date-row">
+                <span>2026年7月15日(水)</span>
+                <span>19:50</span>
+            </div>
+            <div class="history-item">
+                <div class="item-icon-wrapper icon-cyan">K</div>
+                <div class="item-details">
+                    <div class="item-title">コンシェルジュカラオケ阪南</div>
+                    <div class="item-desc">街のお店やネット、Visa加盟店でのご利用...</div>
+                </div>
+                <div class="item-amount">- ¥400</div>
+            </div>
+
+            <div class="history-date-row">
+                <span>2025年12月29日</span>
+                <span></span>
+            </div>
+            <div class="history-item">
+                <div class="item-icon-wrapper icon-blue"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+                <div class="item-details">
+                    <div class="item-title">Kyashバリュー(期限付き)</div>
+                    <div class="item-desc">有効期限が過ぎた、未利用分の期限付き残高を徴収しま...</div>
+                </div>
+                <div class="item-amount">- ¥100</div>
+            </div>
+
+            <div class="history-date-row">
+                <span>2025年12月26日</span>
+                <span></span>
+            </div>
+            <div class="history-item">
+                <div class="item-icon-wrapper icon-green"><i class="fa-regular fa-credit-card"></i></div>
+                <div class="item-details">
+                    <div class="item-title">Kyashバリュー(期限付き)</div>
+                    <div class="item-desc">コンビニやスーパーでVisaのタッチ決済ですぐにご利用...</div>
+                </div>
+                <div class="item-amount amount-green">+ ¥100</div>
+            </div>
+
+            <div class="history-date-row">
+                <span>2025年11月28日</span>
+                <span></span>
+            </div>
+            <div class="history-item">
+                <div class="item-icon-wrapper icon-green"><i class="fa-regular fa-credit-card"></i></div>
+                <div class="item-details">
+                    <div class="item-title">Kyashバリュー(期限付き)</div>
+                    <div class="item-desc">コンビニやスーパーなどでVisaのタッチ決済ですぐにご...</div>
+                </div>
+                <div class="item-amount amount-green">+ ¥100</div>
+            </div>
+
+            <div class="history-date-row">
+                <span>2025年11月1日</span>
+                <span></span>
+            </div>
+            <div class="history-item">
+                <div class="item-icon-wrapper icon-blue"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+                <div class="item-details">
+                    <div class="item-title">Kyashバリュー(期限付き)</div>
+                    <div class="item-desc">有効期限が過ぎた、未利用分の期限付き残高を徴収しま...</div>
+                </div>
+                <div class="item-amount">- ¥100</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bar" id="navBar">
+        <div class="nav-item active" id="navWallet"><i class="fa-solid fa-wallet"></i><span>ウォレット</span></div>
+        <div class="nav-item" id="navReward"><i class="fa-solid fa-gift"></i><span>リワード</span></div>
+        <div class="nav-item" id="navHousehold"><i class="fa-solid fa-chart-pie"></i><span>家計簿</span></div>
+        <div class="nav-item" id="navSend"><i class="fa-solid fa-arrows-rotate"></i><span>送金・請求</span></div>
+        <div class="nav-item" id="navAccount"><i class="fa-solid fa-user"></i><span>アカウント</span></div>
+    </div>
+
+    <div class="toast" id="toast">現在サービスはご利用いただけません</div>
+</div>
+
+<script>
+    const homeScreen = document.getElementById('homeScreen');
+    const historyScreen = document.getElementById('historyScreen');
+    const mainHeader = document.getElementById('mainHeader');
+    const navBar = document.getElementById('navBar');
+    const toast = document.getElementById('toast');
+    const historyBtn = document.getElementById('historyBtn');
+    const balanceBtn = document.getElementById('balanceBtn');
+    const historyBackBtn = document.getElementById('historyBackBtn');
+
+    // トーストポップアップ表示
+    function showUnavailableToast() {
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 2000);
+    }
+
+    // 履歴画面を表示
+    function openHistory() {
+        homeScreen.style.display = 'none';
+        mainHeader.style.display = 'none';
+        navBar.style.display = 'none'; 
+        historyScreen.style.display = 'block';
+    }
+
+    // 元のホーム画面に戻る
+    function closeHistory() {
+        homeScreen.style.display = 'block';
+        mainHeader.style.display = 'flex';
+        navBar.style.display = 'flex';
+        historyScreen.style.display = 'none';
+    }
+
+    // 履歴への遷移と戻るボタンのイベント紐付け
+    historyBtn.addEventListener('click', openHistory);
+    balanceBtn.addEventListener('click', openHistory);
+    historyBackBtn.addEventListener('click', closeHistory);
+
+    // 指定以外のボタン押下時にトーストを出す設定
+    const lockedElements = [
+        'pointBtn', 'withdrawBtn', 'chargeBtn', 'gpayBtn', 'banner1', 'banner2',
+        'navReward', 'navHousehold', 'navSend', 'navAccount', 'bellIcon', 'cardIcon'
+    ];
+
+    lockedElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showUnavailableToast();
+            });
+        }
+    });
+
+    document.getElementById('navWallet').addEventListener('click', () => {
+        if (historyScreen.style.display === 'block') { closeHistory(); }
+    });
+</script>
+
+</body>
+</html>
